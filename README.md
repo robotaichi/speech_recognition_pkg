@@ -1,9 +1,10 @@
 # speech_recognition_pkg
-* USBマイクで音声を録音し、音声を認識するノード<br>
-* 音声認識の結果を発話するノード<br>
-* 音声認識の結果を形態素解析し，結果を出力するノード<br>
+* USBマイクで音声を録音し、音声を認識するノード（speech_recogniton_class.py）<br>
+* 音声認識の結果を発話するノード（play_voice_class.py）<br>
+* 音声認識の結果を形態素解析し，結果を出力するノード（keitaiso_class.py）<br>
+
 をまとめたROSのパッケージです．<br>
-音声録音にはPyAudio，音声認識にはSpeechRecognition，音声合成にはGoogle TTS，形態素解析にはMecabを利用しています．<br>
+音声録音には**PyAudio**，音声認識には**SpeechRecognition**，音声合成には**Google TTS**，形態素解析には**Mecab**を利用しています．<br>
 **Ubuntu 16.04 LTS**の**ROS Kinetic**，**Python 2.7**で動作確認済みです．
 
 ## 起動方法
