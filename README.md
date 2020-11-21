@@ -1,5 +1,8 @@
 # speech_recognition_pkg
-USBマイクで音声を録音すると，その音声を認識し，その結果を発話、形態素解析の結果を出力するROSのパッケージです．<br>
+* USBマイクで音声を録音し、音声を認識するノード<br>
+* 音声認識の結果を発話するノード<br>
+* 音声認識の結果を形態素解析し，結果を出力するノード<br>
+をまとめたROSのパッケージです．<br>
 音声録音にはPyAudio，音声認識にはSpeechRecognition，音声合成にはGoogle TTS，形態素解析にはMecabを利用しています．<br>
 **Ubuntu 16.04 LTS**の**ROS Kinetic**，**Python 2.7**で動作確認済みです．
 
