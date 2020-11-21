@@ -8,6 +8,6 @@ Ubuntu 16.04 LTSのROS Kinetic，Python 2.7で動作確認済みです．
 *・play_voice_class.py（音声合成、音声再生）
 *・keitaiso_class.py（形態素解析）
 の3つのノードを一気に立ち上げます．
-output.mp3にはGoogle TTSにより音声合成した音声データが入ります．
+*output.mp3にはGoogle TTSにより音声合成した音声データが入ります．*
 
 補足：ファイル名「_class」はclassでコードを記述しているという意味です．classがない場合はclassを使用せずに記述しています．
