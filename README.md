@@ -18,7 +18,8 @@ mecab：0.996.2<br>
 ## 起動方法
 ```
 roslaunch speech_recognition_pkg speech_recognition_pkg_class.launch
-```で<br>
+```
+で<br>
 * speech_recogniton_class.py（音声録音，音声認識）<br>
 * play_voice_class.py（音声合成，音声再生）<br>
 * keitaiso_class.py（形態素解析）<br>
