@@ -9,11 +9,6 @@ import MeCab #形態素解析ライブラリ
 
 
 
-#変数設定
-
-
-
-
 class Subscribers(): #サブスクライバーのクラス
     def __init__(self): #コンストラクタと呼ばれる初期化のための関数（メソッド）
         #self.count = 0 
@@ -39,10 +34,12 @@ class Subscribers(): #サブスクライバーのクラス
 
 
 
-    def callback(self, message, word): #サブスクライバーがメッセージを受信した際に実行されるcallback関数。messageにはパブリッシャーによって配信されたメッセージ（データ）が入る
-        word, hinshi = self.keitaiso(u'{}'.format(message.Text).encode('utf-8')) #形態素解析
-        #データを出力する
-        rospy.loginfo("keitaiso：message = %s" % (word));
+    def callback(self, message): #サブスクライバーがメッセージを受信した際に実行されるcallback関数。messageにはパブリッシャーによって配信されたメッセージ（データ）が入る
+        keitaiso_info = self.keitaiso(message.Text)
+        word = keitaiso_info[0]
+
+        for i in range(len(word)): #wordの数だけ繰り返す
+            rospy.loginfo("形態素解析：{}".format(word[i]));
 
 
 
@@ -51,8 +48,7 @@ def main(): #メイン関数
     rospy.init_node('keitaiso_class', anonymous=True)
     #クラスのインスタンス作成（クラス内の関数や変数を使えるようにする）
     sub = Subscribers()
-    #sub.count += 1
-    rospy.spin() #繰り返し(whileと同じ意味)
+    rospy.spin() #callback関数を繰り返し呼び出す（終了防止）
 
 
 

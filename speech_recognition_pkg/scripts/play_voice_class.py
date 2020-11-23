@@ -75,7 +75,7 @@ def main(): #メイン関数
     #クラスのインスタンス作成（クラス内の関数や変数を使えるようにする）
     sub = Subscribers()
     sub.count += 1
-    rospy.spin() #繰り返し(whileと同じ意味)
+    rospy.spin() #callback関数を繰り返し呼び出す（終了防止）
 
 
 
