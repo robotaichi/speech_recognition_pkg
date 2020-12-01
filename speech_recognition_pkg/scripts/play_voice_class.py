@@ -17,13 +17,12 @@ mp3_file = "/home/limlab/catkin_ws/src/speech_recognition_pkg/output.mp3"
 Language_code = 'ja' #日本語
 
 
-
 class Subscribers(): #サブスクライバーのクラス
     def __init__(self): #コンストラクタと呼ばれる初期化のための関数（メソッド）
         self.count = 0 
         #speech_recognition_message型のメッセージを"recognition_txt_topic"というトピックから受信するサブスクライバーの作成
         self.subscriber = rospy.Subscriber('recognition_txt_topic', speech_recognition_message, self.callback)
-        self.rate = rospy.Rate(2) #1秒間に2回データを送信する
+        self.rate = rospy.Rate(2) #1秒間に2回データを受信する
 
 
 
