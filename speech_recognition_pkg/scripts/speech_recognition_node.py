@@ -4,7 +4,7 @@
 #Python2.7用プログラム
 
 import rospy
-from speech_recognition_pkg.msg import speech_recognition_message
+from speech_recognition_pkg.msg import speech_recognition_message #メッセージファイルの読み込み（from パッケージ名.msg import 拡張子なしメッセージファイル名）
 #import pyaudio
 import speech_recognition as sr
 

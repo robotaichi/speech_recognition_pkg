@@ -17,7 +17,7 @@ import pyaudio
 from pydub import AudioSegment
 from pydub.utils import make_chunks
 from gtts import gTTS
-from speech_recognition_pkg.msg import speech_recognition_message
+from speech_recognition_pkg.msg import speech_recognition_message #メッセージファイルの読み込み（from パッケージ名.msg import 拡張子なしメッセージファイル名）
 
 
 
