@@ -78,13 +78,13 @@ class Mecab():
         text1 = "\n{}は\n".format(words[number])
         text2 = []
         for i in range(len(self.output)):
-            if self.output[i][1] != None:
+            if self.output[i][1] != None: #語源がある（要素が存在する）場合
                 text2.append("{}が「{}」\n".format(self.output[i][0], self.output[i][1]))
         for i in range(len(self.output)):
-            if (self.output[i][1] != None) and (self.first == True):
+            if (self.output[i][1] != None) and (self.first == True): #語源がある（要素が存在する）場合
                 text3 = "から「{}」という意味になります\n".format(meanings[number])
                 self.first = False
-            elif self.output[i][1] == None:
+            elif self.output[i][1] == None: #語源がない（配列の要素が全て空の）場合
                 text3 = "「{}」という意味です\n".format(meanings[number])
         text2 = "".join(text2) #配列の文字列要素を連結
         Text = text1 + text2 + text3
