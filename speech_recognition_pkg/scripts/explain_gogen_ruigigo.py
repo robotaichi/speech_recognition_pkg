@@ -9,15 +9,23 @@ import speech_recognition as sr
 import sys
 import MeCab
 import sqlite3
+import requests
+import random
+import shutil
+import bs4
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
+import cv2
 
 #変数設定
 Language = 'ja-JP' #音声認識の対象言語を設定
 r = sr.Recognizer()
 mic = sr.Microphone() #マイクの設定
 
-words = ["conceal", "contract"] #単語リスト
-meanings = ["覆う", "引き合う"] #意味リスト
+words = ["conceal", "contract", "conconcon"] #単語リスト
+meanings = ["覆う", "引き合う", "コンコンコン"] #意味リスト
 element_group_number = 2 #配列を()ごとにまとめる際の()に含まれる要素数
+
 
 
 
@@ -32,7 +40,10 @@ class Mecab():
         self.list_without_blank1 = []
         self.list_without_blank2 = []
         self.output = []
+        self.Text_list = []
+        self.converted_Text_list = []
         self.first = True
+        self.ctr = 0
 
 
 
@@ -77,21 +88,41 @@ class Mecab():
 
     def print_output(self, number):
         text1 = "\n{}は\n".format(words[number])
-        text2 = []
+        self.Text_list.append(text1)
+        text2_list = []
+        search_word_list = []
         for i in range(len(self.output)):
             if self.output[i][1] != None: #語源がある（要素が存在する）場合
-                text2.append("{}が「{}」\n".format(self.output[i][0], self.output[i][1]))
                 wn = Wordnet()
-                wn.search_similar_words(self.output[i][1])
+                synonym = wn.search_similar_words(self.mecab_for_wordnet(self.output[i][1]))
+                text2_list.append("{}が「{}」\n類義語が{}\n".format(self.output[i][0], self.output[i][1], synonym))
+                self.Text_list.append(text2_list[i])
+                search_word_list.append(self.output[i][1])
         for i in range(len(self.output)):
             if (self.output[i][1] != None) and (self.first == True): #語源がある（要素が存在する）場合
                 text3 = "から「{}」という意味になります\n".format(meanings[number])
                 self.first = False
             elif self.output[i][1] == None: #語源がない（配列の要素が全て空の）場合
                 text3 = "「{}」という意味です\n".format(meanings[number])
-        text2 = "".join(text2) #配列の文字列要素を連結
-        Text = text1 + text2 + text3
-        return Text
+        self.Text_list.append(text3)
+        return self.Text_list, search_word_list
+
+
+
+    def mecab_for_wordnet(self, text):
+        tagger = MeCab.Tagger("-Ochasen \ -d /usr/local/lib/mecab/dic/ipadic \ -u /usr/local/lib/mecab/dic/userdic/gogen.dic") # -d(--dicdir)：使用するシステム辞書を指定 -u(--userdic):ユーザ辞書を指定
+        tagger.parse('') # Unicode Decode Errorの回避
+        word_list_with_blank = []
+        word_list_without_blank = []
+        node = tagger.parseToNode(text)
+        while node:
+            word = node.surface
+            word_list_with_blank.append(word)
+            node = node.next
+        for element in word_list_with_blank:
+            if element != '': #形態素がある（要素が存在する）場合
+                word_list_without_blank.append(element)
+        return word_list_without_blank[0]
 
 
 
@@ -100,58 +131,84 @@ class Mecab():
         mecabTagger.parse("")  # Unicode Decode Errorの回避
         node = mecabTagger.parseToNode(words[count])
         self.execute_node(node)
-        Text = self.print_output(count)
-        return Text
+        Text_list, search_word_list = self.print_output(count)
+        return Text_list, search_word_list
 
 
 
 class Wordnet():
     def __init__(self):
-        self.conn = sqlite3.connect("wnjpn.db")
+        self.conn = sqlite3.connect("/home/limlab/wordnet/wnjpn.db")
 
 
 
     def search_similar_words(self, word): # 特定の単語を入力とした時に、類義語を検索する関数
         # 問い合わせしたい単語がWordnetに存在するか確認する
-        cur = self.conn.execute(u"select wordid from word where lemma='%s'" % word)
+        cur = self.conn.execute("select wordid from word where lemma='%s'" %word)
         word_id = 99999999  #一時的なID
         for row in cur:
             word_id = row[0]
     
         # Wordnetに存在する語であるかの判定
         if word_id==99999999:
-            print(u"「%s」は、Wordnetに存在しない単語です。" % word)
+            print("「%s」は、Wordnetに存在しない単語です。" %word)
             return
-        else:
-            print(u"「%s」の類似語\n" % word)
     
         # 入力された単語を含む概念を検索する
-        cur = self.conn.execute(u"select synset from sense where wordid='%s'" % word_id)
+        cur = self.conn.execute("select synset from sense where wordid='%s'" % word_id)
         synsets = []
+        synonyms = []
         for row in cur:
             synsets.append(row[0])
     
         # 概念に含まれる単語を検索して画面出力する
-        num = 1
         for synset in synsets:
-            cur1 = self.conn.execute(u"select name from synset where synset='%s'" % synset)
+            cur1 = self.conn.execute("select name from synset where synset='%s'" % synset)
             for row1 in cur1:
-                print(u"%sつめの概念 : %s" %(num, row1[0]))
-            cur2 = self.conn.execute("select def from synset_def where (synset='%s' and lang='jpn')" % synset)
-            sub_num = 1
-            for row2 in cur2:
-                print(u"意味%s : %s" %(sub_num, row2[0]))
-                sub_num += 1
-            cur3 = self.conn.execute(u"select wordid from sense where (synset='%s' and wordid!=%s)" % (synset,word_id))
-            sub_num = 1
-            for row3 in cur3:
-                target_word_id = row3[0]
-                cur3_1 = self.conn.execute(u"select lemma from word where wordid=%s" % target_word_id)
-                for row3_1 in cur3_1:
-                    print(u"類義語%s : %s" % (sub_num, row3_1[0]))
-                    sub_num += 1
-            print("\n")
-            num += 1
+                synonyms.append(row1[0])
+        return synonyms[0]
+
+
+
+class Google_image():
+    def __init__(self):
+        self.file_name = "/home/limlab/catkin_ws/src/speech_recognition_pkg/scripts/download_image.png"
+
+
+
+    def create_url(self, data): #Google画像検索のURLを生成
+        while True:
+            Res = requests.get("https://www.google.com/search?hl=jp&q=" + data + "&btnG=Google+Search&tbs=0&safe=on&tbm=isch")
+            Html = Res.text
+            Soup = bs4.BeautifulSoup(Html,'lxml')
+            links = Soup.find_all("img")
+            link = random.choice(links).get("src")
+            if link != "/images/branding/searchlogo/1x/googlelogo_desk_heirloom_color_150x55dp.gif": #Gif画像でない場合
+                print("{}\n".format(link))
+                return link
+            # else:
+            #     print("Gif画像のURLを取得しました。再取得します")
+    
+    
+    
+    def download_img(self, url): #Google画像検索から画像をダウンロード
+        r = requests.get(url, stream=True)
+        if r.status_code == 200:
+            with open(self.file_name, 'wb') as f:
+                r.raw.decode_content = True
+                shutil.copyfileobj(r.raw, f)
+
+
+
+    def show_image(self, url): #ダウンロードした画像の表示
+        self.download_img(url) #Google画像検索から画像をダウンロード
+        img = cv2.imread(self.file_name) #画像の読み込み
+        zoom_rate = 2.5 #拡大率
+        image = cv2.resize(img, dsize=None, fx = zoom_rate, fy = zoom_rate) #画像を拡大
+        cv2.imshow("image", image) #拡大した画像を表示
+        cv2.moveWindow('image', 200, 550) #ウィンドウ位置の変更
+        cv2.waitKey(4000) #4秒待機
+        cv2.destroyAllWindows() #ウィンドウを破棄
 
 
 
@@ -162,26 +219,38 @@ class Publishsers(): #パブリッシャーのクラス
         self.message = speech_recognition_message() 
         #speech_recognition_message型のメッセージを"recognition_txt_topic"というトピックに送信するパブリッシャーの作成
         self.publisher = rospy.Publisher('recognition_txt_topic', speech_recognition_message, queue_size=10)
-        self.rate = rospy.Rate(0.4) #1秒間に0.4回データを送信する
+        self.rate = rospy.Rate(0.3) #1秒間に0.3回データを送信する
+        self.number = 0
 
 
 
     def explain(self): #説明
             mc = Mecab()
-            Text = mc.mecab_main(self.count)
-            print(Text)
-            return Text
+            Text_list, search_word_list = mc.mecab_main(self.count)
+            return Text_list, search_word_list
+
 
 
     def make_msg(self): #送信するメッセージの作成
-            self.message.Text = "{}".format(self.explain())
-            self.message.count = self.count
+        Text_list, search_word_list = self.explain()
+        if len(Text_list) >= self.number:
+            self.message.Text = "{}".format(Text_list[self.number])
+        self.message.count = self.count
+        return Text_list, search_word_list
 
 
 
     def send_msg(self): #メッセージを送信
-        self.make_msg() #送信するメッセージの作成
-        self.publisher.publish(self.message) #作成したメッセージの送信
+        Text_list, search_word_list = self.make_msg() #送信するメッセージの作成
+        for self.number in range(len(Text_list)):
+            self.message.Text = "{}".format(Text_list[self.number])
+            self.publisher.publish(self.message) #作成したメッセージの送信
+            print(self.message.Text)
+            if (len(search_word_list) >= self.number) and (self.number >= 1):
+                gi = Google_image() #クラスのインスタンス生成
+                link = gi.create_url(search_word_list[self.number-1]) #Google画像検索のURLを生成
+                gi.show_image(link) #ダウンロードした画像の表示
+            self.rate.sleep()
         #rospy.loginfo("送信：message = %s, count = %d" %(self.message.Text, self.message.count))
 
 
@@ -193,12 +262,13 @@ def main(): #メイン関数
     pub = Publishsers()
     
     while not rospy.is_shutdown(): #Ctrl + Cが押されるまで繰り返す
-        pub.rate.sleep()
-        pub.send_msg() #メッセージを送信
-        pub.rate.sleep()
-        pub.count += 1
-        if pub.count >= len(words):
-            sys.exit()
+        if len(words) > pub.count:
+            pub.rate.sleep()
+            pub.send_msg() #メッセージを送信
+            pub.rate.sleep()
+            pub.count += 1
+        else:
+            break
 
 
 
