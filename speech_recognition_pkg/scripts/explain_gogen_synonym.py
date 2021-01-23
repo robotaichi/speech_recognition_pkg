@@ -13,6 +13,7 @@ import requests
 import random
 import shutil
 import bs4
+import os
 import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
 import cv2
@@ -22,8 +23,8 @@ Language = 'ja-JP' #音声認識の対象言語を設定
 r = sr.Recognizer()
 mic = sr.Microphone() #マイクの設定
 
-words = ["conceal", "contract", "conconcon"] #単語リスト
-meanings = ["覆う", "引き合う", "コンコンコン"] #意味リスト
+words = ["conceal", "contract", "contest"] #単語リスト
+meanings = ["覆う", "引き合う", "コンテスト"] #意味リスト
 element_group_number = 2 #配列を()ごとにまとめる際の()に含まれる要素数
 
 
@@ -87,7 +88,7 @@ class Mecab():
 
 
     def print_output(self, number):
-        text1 = "\n{}は\n".format(words[number])
+        text1 = "{}は\n".format(words[number])
         self.Text_list.append(text1)
         text2_list = []
         search_word_list = []
@@ -138,7 +139,7 @@ class Mecab():
 
 class Wordnet():
     def __init__(self):
-        self.conn = sqlite3.connect("/home/limlab/wordnet/wnjpn.db")
+        self.conn = sqlite3.connect("/home/limlab/Programs/wordnet/wnjpn.db")
 
 
 

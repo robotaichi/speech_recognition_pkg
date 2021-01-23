@@ -3,3 +3,4 @@
 
 string Text
 uint32 count
+bool realsense_tf

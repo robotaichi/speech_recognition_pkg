@@ -18,15 +18,9 @@ mp3_file = "/home/limlab/catkin_ws/src/speech_recognition_pkg/output.mp3"
 Language_code = 'ja' #日本語
 
 
-class Subscribers(): #サブスクライバーのクラス
-    def __init__(self): #コンストラクタと呼ばれる初期化のための関数（メソッド）
-        self.count = 0 
-        #speech_recognition_message型のメッセージを"recognition_txt_topic"というトピックから受信するサブスクライバーの作成
-        self.subscriber = rospy.Subscriber('recognition_txt_topic', speech_recognition_message, self.callback)
-        self.rate = rospy.Rate(2) #1秒間に2回データを受信する
 
 
-
+class Gtts():
     def google_tts(self, Text): #Google TTSによる音声合成
         tts = gTTS(text=Text, lang=Language_code)
         tts.save(mp3_file)  # mp3で音声を保存する仕様
@@ -42,7 +36,7 @@ class Subscribers(): #サブスクライバーのクラス
             self.CHANNELS = self.audio_data.channels #チャンネル数
             #CHANNELS = 1 #チャンネル数
             self.RATE = self.audio_data.frame_rate #サンプリング周波数（サンプルレート、フレームレート）
-            print('\nmp3_file: {}\nFORMAT: {}\nCHANNELS: {}\nRATE: {}\n').format(mp3_file, self.FORMAT, self.CHANNELS, self.RATE) #mp3ファイルの情報を表示
+            #print('\nmp3_file: {}\nFORMAT: {}\nCHANNELS: {}\nRATE: {}\n').format(mp3_file, self.FORMAT, self.CHANNELS, self.RATE) #mp3ファイルの情報を表示
             self.play() #mp3ファイルを再生
 
 
@@ -63,10 +57,21 @@ class Subscribers(): #サブスクライバーのクラス
 
 
 
+class Subscribers(): #サブスクライバーのクラス
+    def __init__(self): #コンストラクタと呼ばれる初期化のための関数（メソッド）
+        self.count = 0 
+        #speech_recognition_message型のメッセージを"recognition_txt_topic"というトピックから受信するサブスクライバーの作成
+        self.subscriber = rospy.Subscriber('recognition_txt_topic', speech_recognition_message, self.callback)
+        self.rate = rospy.Rate(2) #1秒間に2回データを受信する
+        self.gt = Gtts()
+
+
+
     def callback(self, message): #サブスクライバーがメッセージを受信した際に実行されるcallback関数。messageにはパブリッシャーによって配信されたメッセージ（データ）が入る
         # 受信したデータを出力する
-        rospy.loginfo("受信：message = %s, count = %d" % (message.Text, message.count));
-        self.google_tts(unicode(message.Text,'utf-8')) #Google TTSによる音声合成
+        #rospy.loginfo("受信：message = %s, count = %d" % (message.Text, message.count));
+        
+        self.gt.google_tts(unicode(message.Text,'utf-8')) #Google TTSによる音声合成
 
 
 
