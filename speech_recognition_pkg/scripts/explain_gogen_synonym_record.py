@@ -34,7 +34,7 @@ words = ["conceal", "contract", "contest"] #単語リスト
 meanings = ["覆う", "引き合う", "コンテスト"] #意味リスト
 
 #もう一度説明が必要だと判定する音声認識結果のリスト
-recognized_text_list = ["いいえ", "いえいえ", "いいえいいえ", "いいえいいえいいえ", "うーん", "ううん", "えーと", "わからない", "分からない", "わからん", "分からん", "ノー", "NO", "えっと", "もう一度説明して", "もう一回説明して", "もう一度", "もう一回", "もう1度", "もう1回","もういちど", "もういっかい", "もう一度お願い", "もう一回お願い", "もういちどお願い", "もういっかいお願い"]
+recognized_text_list = ["いいえ", "いえ", "うーん", "ううん", "えーと", "あり", "ませ", "わから", "いや", "ノー", "NO", "えっ", "1", "一", "回", "度", "いちど", "かい", "教え", "お願い", "わかん", "ない", "まだ", "ちょっと"]
 #変数設定
 Language = 'ja-JP' #音声認識の対象言語を設定
 r = sr.Recognizer()
@@ -137,6 +137,17 @@ class Mecab():
             if element != '': #形態素がある（要素が存在する）場合
                 word_list_without_blank.append(element)
         return word_list_without_blank[0]
+
+
+
+    def mecab_wakati(self, voice_recognition_response):
+        wakati_text_list = []
+        mecabTagger = MeCab.Tagger("-Owakati \ -d /usr/local/lib/mecab/dic/ipadic \ -u /usr/local/lib/mecab/dic/userdic/gogen.dic") # -d(--dicdir)：使用するシステム辞書を指定 -u(--userdic):ユーザ辞書を指定
+        wakati_text = mecabTagger.parse(voice_recognition_response).split() 
+        for i in range(len(wakati_text)):
+            wakati_text_list.append(wakati_text[i])
+            # print(unicode(wakati_text[i], "utf-8"))
+        return wakati_text_list
 
 
 
@@ -306,9 +317,9 @@ class OpenJTalk_Client():  # クライアントのクラス
         self.openjtalk_service_message.openjtalk_request = "今の説明で分かりましたか？\n"
         print("\n\n{}\n".format(self.openjtalk_service_message.openjtalk_request))
         self.openjtalk_service_request() #OpenJTalkサービスのリクエスト
-        self.openjtalk_service_message.openjtalk_request = "\n\nマイクに向かって答えてください"
-        print("{}\n\n".format(self.openjtalk_service_message.openjtalk_request))
-        self.openjtalk_service_request() #OpenJTalkサービスのリクエスト
+        # self.openjtalk_service_message.openjtalk_request = "\n\nマイクに向かって答えてください"
+        # print("{}\n\n".format(self.openjtalk_service_message.openjtalk_request))
+        # self.openjtalk_service_request() #OpenJTalkサービスのリクエスト
         vrc = Voice_Recognition_Client()
         voice_recognition_response = vrc.voice_recognition_service_request()
         return voice_recognition_response
@@ -379,6 +390,13 @@ class OpenJTalk_Client():  # クライアントのクラス
 
 
 
+    def voice_recognition_response_mecab(self, voice_recognition_response): 
+            mc = Mecab()
+            wakati_text_list = mc.mecab_wakati(voice_recognition_response)
+            return wakati_text_list
+
+
+
     def main_loop(self):
         while True:
             rs = self.realsense_action_request() #リアルセンスアクションのリクエスト
@@ -388,16 +406,17 @@ class OpenJTalk_Client():  # クライアントのクラス
 
             if voice_recognition_necessity: #音声認識が必要（True）な場合
                 voice_recognition_response = self.ask_question() #わかったかどうかの質問
+                wakati_text_list = self.voice_recognition_response_mecab(voice_recognition_response)
 
-                if voice_recognition_response in recognized_text_list: #もう一度説明が必要だと判定するリストに音声認識結果が含まれている場合
-                    self.explain_again(Text_list, search_word_list) #もう一度説明
-                    break
+                for wakati_text in wakati_text_list:
+                    if wakati_text in recognized_text_list: #もう一度説明が必要だと判定するリストに音声認識結果が含まれている場合
+                        self.explain_again(Text_list, search_word_list) #もう一度説明
+                        break
+                if len(Text_list)-1 > self.count:
+                    self.go_to_next_word() #次の単語に移る
                 else:
-                    if len(Text_list)-1 > self.count:
-                        self.go_to_next_word() #次の単語に移る
-                    else:
-                        self.finish_explanation()
-                    break
+                    self.finish_explanation()
+                break
             else:
                 if len(Text_list)-1 > self.count:
                     self.go_to_next_word() #次の単語に移る

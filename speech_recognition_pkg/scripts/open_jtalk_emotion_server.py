@@ -268,7 +268,7 @@ class OpenJTalk_Server():  # サーバーのクラス
 
     def success_log(self, req):  # 成功メッセージの表示（callback関数）
         #rospy.loginfo("\nOpenJTalkサービスのリクエストがありました：\nmessage = {}\n".format(req.openjtalk_request))  # クライアント側で使用するサービスの定義
-        pub = Publishsers() #パブリッシャのクラスのインスタンス生成
+        pub = Publishsers() #パブリッシャのクラスのインスタンス生成（if文の中に入れると送信できないので注意）
         nlp = NLP()  # クラスのインスタンス生成
         emotion, text = nlp.analysis_emotion(req.openjtalk_request)  # 形態素から感情分析
         jt = Jtalk()  # クラスのインスタンス生成
@@ -276,7 +276,10 @@ class OpenJTalk_Server():  # サーバーのクラス
         if "類義語" in req.openjtalk_request: # 受信したreq.openjtalk_requestに「類義語」が含まれている場合
             srv = Play_End_Check_Server() #クラスのインスタンス生成
             srv.service_response() #サービスの応答
-        if "意味になります" in req.openjtalk_request: # 受信したreq.openjtalk_requestに「意味になります」が含まれている場合
+        if "意味になります" in req.openjtalk_request: # 受信したreq.openjtalk_requestに「意味になります」か「意味です」が含まれている場合
+            # for i in range(2): #1回の送信だとデータの確実なやり取りが保証されていないため、3回繰り返す
+            pub.send_msg() #メッセージの送信
+        if "意味です" in req.openjtalk_request: # 受信したreq.openjtalk_requestに「意味になります」か「意味です」が含まれている場合
             # for i in range(2): #1回の送信だとデータの確実なやり取りが保証されていないため、3回繰り返す
             pub.send_msg() #メッセージの送信
             # self.rate.sleep()
@@ -333,7 +336,7 @@ class Publishsers():  # パブリッシャーのクラス
         # speech_recognition_message型のメッセージを"realsense_tf_topic"というトピックに送信するパブリッシャーの作成
         self.realsense_tf_publisher = rospy.Publisher(
             'realsense_tf_topic', speech_recognition_message, queue_size=10)
-        self.rate = rospy.Rate(0.1)  # 1秒間に0.1回データを送信する
+        self.rate = rospy.Rate(10)  # 1秒間に10回データを送信する
 
 
 
@@ -346,6 +349,9 @@ class Publishsers():  # パブリッシャーのクラス
         self.make_realsense_tf()
         self.realsense_tf_publisher.publish(self.message)  # 作成したメッセージの送信
         rospy.loginfo("realsense_tfを送信:{}".format(self.message.realsense_tf))
+        # self.message.realsense_tf = False
+        # self.count = 0
+        # print("\n\nリセット確認 realsense_tf:{}, count:{}\n".format(self.message.realsense_tf, self.count))
 
 
 
