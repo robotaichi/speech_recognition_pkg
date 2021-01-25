@@ -58,6 +58,7 @@ add_service_files(
   play_end_check_service.srv
   voice_recognition_service.srv
   openjtalk_service.srv
+  google_image_service.srv
 )
 
 ## Generate actions in the 'action' folder

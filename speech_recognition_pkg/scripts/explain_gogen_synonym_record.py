@@ -7,7 +7,7 @@
 import rospy #ROSをpythonで使用するのに必要
 import actionlib #アクション通信に使用
 from speech_recognition_pkg.msg import speech_recognition_message #メッセージファイルの読み込み（from パッケージ名.msg import 拡張子なしメッセージファイル名）
-from speech_recognition_pkg.srv import play_end_check_service, voice_recognition_service, openjtalk_service # サービスファイルの読み込み（from パッケージ名.srv import 拡張子なしサービスファイル名）
+from speech_recognition_pkg.srv import play_end_check_service, voice_recognition_service, openjtalk_service, google_image_service # サービスファイルの読み込み（from パッケージ名.srv import 拡張子なしサービスファイル名）
 # from speech_recognition_pkg.srv import record_check_service # サービスファイルの読み込み（from パッケージ名.srv import 拡張子なしサービスファイル名）
 from face_recognition_pkg.srv import calculate_service, face_recognition_service, realsense_service, voice_recognition_necessity_service, check_finish_service # サービスファイルの読み込み（from パッケージ名.srv import 拡張子なしサービスファイル名）
 from face_recognition_pkg.msg import face_recognition_message, realsense_actionAction, realsense_actionResult, realsense_actionGoal, check_finish_actionAction, check_finish_actionResult, check_finish_actionGoal #メッセージファイルの読み込み（from パッケージ名.msg import 拡張子なしアクションメッセージファイル名）。actionフォルダで定義した「アクションファイル名.action」ファイルを作成し、catkin_makeすると、「アクションファイル名Action.msg」、「アクションファイル名Feedback.msg」、「アクションファイル名ActionFeedback.msg」、「アクションファイル名Goal.msg」、「アクションファイル名ActionGoal.msg」、「アクションファイル名Result.msg」、「アクションファイル名ActionResult.msg」が生成される。生成されたアクションメッセージファイルは、「ls /home/limlab/catkin_ws/devel/share/パッケージ名/msg」コマンドで確認できる。アクションサーバ側は、「アクションファイル名Action.msg」、「アクションファイル名Result.msg」（途中経過が必要な場合は、「アクションファイル名Feedback.msg」）をインポートする。「アクションファイル名Goal.msg」は、アクションクライアントからリクエストがあった場合に呼び出されるコールバック関数の引数として取得できるため、アクションサーバ側は必要ない。アクションクライアント側は、「アクションファイル名Action.msg」、「アクションファイル名Result.msg」、「アクションファイル名Goal.msg」（途中経過が必要な場合は、「アクションファイル名Feedback.msg」）をインポートする。
@@ -195,59 +195,83 @@ class Wordnet():
 
 
 
-class Google_image():
-    def __init__(self):
-        self.file_name = "/home/limlab/catkin_ws/src/speech_recognition_pkg/scripts/download_image.png"
-        self.rate = rospy.Rate(0.3)
+class Google_Image_Client():  # クライアントのクラス
+    def __init__(self):  # コンストラクタと呼ばれる初期化のための関数（メソッド）
+        self.rate = rospy.Rate(1)  # 1秒間に1回データを受信する
+        self.service_message = google_image_service()
 
 
 
-    def create_url(self, data, text): #Google画像検索のURLを生成
-        while True:
-            Res = requests.get("https://www.google.com/search?hl=jp&q=" + data + "&btnG=Google+Search&tbs=0&safe=on&tbm=isch")
-            Html = Res.text
-            Soup = bs4.BeautifulSoup(Html,'lxml')
-            links = Soup.find_all("img")
-            link = random.choice(links).get("src")
-            if link != "/images/branding/searchlogo/1x/googlelogo_desk_heirloom_color_150x55dp.gif": #Gif画像でない場合
-                # print("{}\n".format(link))
-                self.write_txt(link, text) #txtファイルに書き込み
-                return link
-            # else:
-            #     print("Gif画像のURLを取得しました。再取得します")
+    def google_image_service_request(self, search_word, text):  # サービスのリクエスト
+        rospy.wait_for_service('google_image_service')  # サービスが使えるようになるまで待機
+        try:
+            self.client = rospy.ServiceProxy(
+                'google_image_service', google_image_service)  # クライアント側で使用するサービスの定義
+            self.service_message.search_word = search_word
+            self.service_message.text = text
+            #「戻り値 = self.client(引数)」。クライアントがsrvファイルで定義した引数（srvファイル内「---」の上側）を別ファイルのサーバーにリクエストし、サーバーからの返り値（srvファイル内「---」の下側）をresponseに代入
+            response = self.client(self.service_message.search_word, self.service_message.text)
+            # rospy.loginfo("Googleサービスのリクエストに成功：{}".format(response.google_image_response))
+            return response.google_image_response
+
+        except rospy.ServiceException:
+            rospy.loginfo("Googleサービスのリクエストに失敗")
 
 
 
-    def write_txt(self, link, text): #txtファイルに書き込み
-        with open("/home/limlab/catkin_ws/src/speech_recognition_pkg/google_image_url.txt", "a") as f: #ファイルを追記モードで開き、自動的に閉じる（with）
-            f.write("{}{}\n".format(text, link))
+# class Google_image():
+#     def __init__(self):
+#         self.file_name = "/home/limlab/catkin_ws/src/speech_recognition_pkg/scripts/download_image.png"
+#         self.rate = rospy.Rate(0.3)
 
 
 
-    def download_img(self, url): #Google画像検索から画像をダウンロード
-        r = requests.get(url, stream=True)
-        if r.status_code == 200:
-            with open(self.file_name, 'wb') as f:
-                r.raw.decode_content = True
-                shutil.copyfileobj(r.raw, f)
+#     def create_url(self, data, text): #Google画像検索のURLを生成
+#         while True:
+#             Res = requests.get("https://www.google.com/search?hl=jp&q=" + data + "&btnG=Google+Search&tbs=0&safe=on&tbm=isch")
+#             Html = Res.text
+#             Soup = bs4.BeautifulSoup(Html,'lxml')
+#             links = Soup.find_all("img")
+#             link = random.choice(links).get("src")
+#             if link != "/images/branding/searchlogo/1x/googlelogo_desk_heirloom_color_150x55dp.gif": #Gif画像でない場合
+#                 # print("{}\n".format(link))
+#                 self.write_txt(link, text) #txtファイルに書き込み
+#                 return link
+#             # else:
+#             #     print("Gif画像のURLを取得しました。再取得します")
 
 
 
-    def show_image(self, url): #ダウンロードした画像の表示
-        self.download_img(url) #Google画像検索から画像をダウンロード
-        img = cv2.imread(self.file_name) #画像の読み込み
-        zoom_rate = 2.5 #拡大率
-        image = cv2.resize(img, dsize=None, fx = zoom_rate, fy = zoom_rate) #画像を拡大
-        cv2.imshow("image", image) #拡大した画像を表示
-        cv2.moveWindow('image', 200, 550) #ウィンドウ位置の変更
-        cv2.waitKey(5000) #5秒待機
-        # self.rate.sleep()
-        pecc = Play_End_Check_Client()
-        pecc.play_end_check_service_request()
-        # cv2.waitKey(1000) #1秒待機
-            # print("OK")
-        # pecc.play_end_check_service_request()
-        cv2.destroyAllWindows() #ウィンドウを破棄
+#     def write_txt(self, link, text): #txtファイルに書き込み
+#         with open("/home/limlab/catkin_ws/src/speech_recognition_pkg/google_image_url.txt", "a") as f: #ファイルを追記モードで開き、自動的に閉じる（with）
+#             f.write("{}{}\n".format(text, link))
+
+
+
+#     def download_img(self, url): #Google画像検索から画像をダウンロード
+#         r = requests.get(url, stream=True)
+#         if r.status_code == 200:
+#             with open(self.file_name, 'wb') as f:
+#                 r.raw.decode_content = True
+#                 shutil.copyfileobj(r.raw, f)
+
+
+
+#     def show_image(self, url): #ダウンロードした画像の表示
+#         self.download_img(url) #Google画像検索から画像をダウンロード
+#         img = cv2.imread(self.file_name) #画像の読み込み
+#         zoom_rate = 2.5 #拡大率
+#         image = cv2.resize(img, dsize=None, fx = zoom_rate, fy = zoom_rate) #画像を拡大
+#         cv2.imshow("image", image) #拡大した画像を表示
+#         cv2.moveWindow('image', 200, 550) #ウィンドウ位置の変更
+#         cv2.waitKey(5000) #5秒待機
+#         # self.rate.sleep()
+#         pecc = Play_End_Check_Client()
+#         pecc.play_end_check_service_request()
+#         # cv2.waitKey(1000) #1秒待機
+#             # print("OK")
+#         # pecc.play_end_check_service_request()
+#         cv2.destroyAllWindows() #ウィンドウを破棄
 
 
 
@@ -291,9 +315,11 @@ class OpenJTalk_Client():  # クライアントのクラス
 
 
     def google_image(self, Text_list, search_word_list): #Google画像検索の処理
-        gi = Google_image() #クラスのインスタンス生成
-        link = gi.create_url(search_word_list[self.number-1], Text_list[self.number]) #Google画像検索のURLを生成
-        gi.show_image(link) #ダウンロードした画像の表示
+        # gi = Google_image() #クラスのインスタンス生成
+        # link = gi.create_url(search_word_list[self.number-1], Text_list[self.number]) #Google画像検索のURLを生成
+        # gi.show_image(link) #ダウンロードした画像の表示
+        gic = Google_Image_Client()
+        gic.google_image_service_request(search_word_list[self.number-1], Text_list[self.number])
 
 
 
