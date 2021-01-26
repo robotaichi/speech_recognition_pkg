@@ -59,6 +59,7 @@ add_service_files(
   voice_recognition_service.srv
   openjtalk_service.srv
   google_image_service.srv
+  google_tts_service.srv
 )
 
 ## Generate actions in the 'action' folder

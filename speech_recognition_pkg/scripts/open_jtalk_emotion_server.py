@@ -348,10 +348,7 @@ class Publishsers():  # パブリッシャーのクラス
     def send_msg(self):  # メッセージを送信
         self.make_realsense_tf()
         self.realsense_tf_publisher.publish(self.message)  # 作成したメッセージの送信
-        rospy.loginfo("realsense_tfを送信:{}".format(self.message.realsense_tf))
-        # self.message.realsense_tf = False
-        # self.count = 0
-        # print("\n\nリセット確認 realsense_tf:{}, count:{}\n".format(self.message.realsense_tf, self.count))
+        # rospy.loginfo("realsense_tfを送信:{}".format(self.message.realsense_tf))
 
 
 
@@ -359,12 +356,8 @@ def main():  # メイン関数
     # 初期化し、ノードの名前を設定
     rospy.init_node('openjtalk', anonymous=True)
     # クラスのインスタンス作成（クラス内の関数や変数を使えるようにする）
-    # sub = Subscribers()
-    # sub.count += 1
     ojs = OpenJTalk_Server()
     ojs.service_response()
-    # srv = Server()
-    # srv.service_response() #サービスの応答
     rospy.spin()  # callback関数を繰り返し呼び出す（終了防止）
 
 

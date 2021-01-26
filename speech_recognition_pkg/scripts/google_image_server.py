@@ -34,9 +34,6 @@ class Play_End_Check_Client():  # クライアントのクラス
                 'play_end_check_service', play_end_check_service)  # クライアント側で使用するサービスの定義。サーバーからの返り値（srvファイル内「---」の下側）をresponseに代入
             self.service_message.play_end_check_request = "再生確認サービスのリクエスト"
             response = self.client(self.service_message.play_end_check_request)
-            # self.rate.sleep()
-            # rospy.loginfo("再生確認サービスのリクエストに成功：{}".format(response.play_end_check_response))
-            # return response.play_end_check_response
 
         except rospy.ServiceException:
             rospy.loginfo("再生確認サービスのリクエストに失敗")

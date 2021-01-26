@@ -211,67 +211,10 @@ class Google_Image_Client():  # クライアントのクラス
             self.service_message.text = text
             #「戻り値 = self.client(引数)」。クライアントがsrvファイルで定義した引数（srvファイル内「---」の上側）を別ファイルのサーバーにリクエストし、サーバーからの返り値（srvファイル内「---」の下側）をresponseに代入
             response = self.client(self.service_message.search_word, self.service_message.text)
-            # rospy.loginfo("Googleサービスのリクエストに成功：{}".format(response.google_image_response))
             return response.google_image_response
 
         except rospy.ServiceException:
             rospy.loginfo("Googleサービスのリクエストに失敗")
-
-
-
-# class Google_image():
-#     def __init__(self):
-#         self.file_name = "/home/limlab/catkin_ws/src/speech_recognition_pkg/scripts/download_image.png"
-#         self.rate = rospy.Rate(0.3)
-
-
-
-#     def create_url(self, data, text): #Google画像検索のURLを生成
-#         while True:
-#             Res = requests.get("https://www.google.com/search?hl=jp&q=" + data + "&btnG=Google+Search&tbs=0&safe=on&tbm=isch")
-#             Html = Res.text
-#             Soup = bs4.BeautifulSoup(Html,'lxml')
-#             links = Soup.find_all("img")
-#             link = random.choice(links).get("src")
-#             if link != "/images/branding/searchlogo/1x/googlelogo_desk_heirloom_color_150x55dp.gif": #Gif画像でない場合
-#                 # print("{}\n".format(link))
-#                 self.write_txt(link, text) #txtファイルに書き込み
-#                 return link
-#             # else:
-#             #     print("Gif画像のURLを取得しました。再取得します")
-
-
-
-#     def write_txt(self, link, text): #txtファイルに書き込み
-#         with open("/home/limlab/catkin_ws/src/speech_recognition_pkg/google_image_url.txt", "a") as f: #ファイルを追記モードで開き、自動的に閉じる（with）
-#             f.write("{}{}\n".format(text, link))
-
-
-
-#     def download_img(self, url): #Google画像検索から画像をダウンロード
-#         r = requests.get(url, stream=True)
-#         if r.status_code == 200:
-#             with open(self.file_name, 'wb') as f:
-#                 r.raw.decode_content = True
-#                 shutil.copyfileobj(r.raw, f)
-
-
-
-#     def show_image(self, url): #ダウンロードした画像の表示
-#         self.download_img(url) #Google画像検索から画像をダウンロード
-#         img = cv2.imread(self.file_name) #画像の読み込み
-#         zoom_rate = 2.5 #拡大率
-#         image = cv2.resize(img, dsize=None, fx = zoom_rate, fy = zoom_rate) #画像を拡大
-#         cv2.imshow("image", image) #拡大した画像を表示
-#         cv2.moveWindow('image', 200, 550) #ウィンドウ位置の変更
-#         cv2.waitKey(5000) #5秒待機
-#         # self.rate.sleep()
-#         pecc = Play_End_Check_Client()
-#         pecc.play_end_check_service_request()
-#         # cv2.waitKey(1000) #1秒待機
-#             # print("OK")
-#         # pecc.play_end_check_service_request()
-#         cv2.destroyAllWindows() #ウィンドウを破棄
 
 
 
@@ -289,9 +232,6 @@ class Play_End_Check_Client():  # クライアントのクラス
                 'play_end_check_service', play_end_check_service)  # クライアント側で使用するサービスの定義。サーバーからの返り値（srvファイル内「---」の下側）をresponseに代入
             self.service_message.play_end_check_request = "再生確認サービスのリクエスト"
             response = self.client(self.service_message.play_end_check_request)
-            # self.rate.sleep()
-            # rospy.loginfo("再生確認サービスのリクエストに成功：{}".format(response.play_end_check_response))
-            # return response.play_end_check_response
 
         except rospy.ServiceException:
             rospy.loginfo("再生確認サービスのリクエストに失敗")
@@ -315,9 +255,6 @@ class OpenJTalk_Client():  # クライアントのクラス
 
 
     def google_image(self, Text_list, search_word_list): #Google画像検索の処理
-        # gi = Google_image() #クラスのインスタンス生成
-        # link = gi.create_url(search_word_list[self.number-1], Text_list[self.number]) #Google画像検索のURLを生成
-        # gi.show_image(link) #ダウンロードした画像の表示
         gic = Google_Image_Client()
         gic.google_image_service_request(search_word_list[self.number-1], Text_list[self.number])
 
@@ -327,7 +264,6 @@ class OpenJTalk_Client():  # クライアントのクラス
         Text_list, search_word_list = self.exec_mecab()
         if len(Text_list) >= self.number:
             self.openjtalk_service_message.openjtalk_request = "{}".format(Text_list[self.number])
-        # self.message.count = self.count
         return Text_list, search_word_list
 
 
@@ -343,9 +279,6 @@ class OpenJTalk_Client():  # クライアントのクラス
         self.openjtalk_service_message.openjtalk_request = "今の説明で分かりましたか？\n"
         print("\n\n{}\n".format(self.openjtalk_service_message.openjtalk_request))
         self.openjtalk_service_request() #OpenJTalkサービスのリクエスト
-        # self.openjtalk_service_message.openjtalk_request = "\n\nマイクに向かって答えてください"
-        # print("{}\n\n".format(self.openjtalk_service_message.openjtalk_request))
-        # self.openjtalk_service_request() #OpenJTalkサービスのリクエスト
         vrc = Voice_Recognition_Client()
         voice_recognition_response = vrc.voice_recognition_service_request()
         return voice_recognition_response
@@ -365,21 +298,16 @@ class OpenJTalk_Client():  # クライアントのクラス
     def explain_again(self, Text_list, search_word_list): #もう一度説明
         self.number = 0
         self.openjtalk_service_message.openjtalk_request = "わかりました"
-        # for i in range(4):
-        #     self.rate.sleep()
         print("\n\n{}\n\n".format(self.openjtalk_service_message.openjtalk_request))
         self.openjtalk_service_request() #OpenJTalkサービスのリクエスト
-        # for i in range(3):
-        #     self.rate.sleep()
         self.openjtalk_service_message.openjtalk_request = "\n\nもう一度説明します"
         print("{}\n\n".format(self.openjtalk_service_message.openjtalk_request))
         self.openjtalk_service_request() #OpenJTalkサービスのリクエスト
-        # for i in range(3):
-        #     self.rate.sleep()
         self.explain(Text_list, search_word_list) #説明
-        if len(Text_list)-1 > self.count:
+
+        if len(Text_list)-1 > self.count: #最後の単語でない場合
             self.go_to_next_word() #次の単語に移る
-        else:
+        else: #最後の単語の場合
             self.finish_explanation()
 
 
@@ -391,11 +319,9 @@ class OpenJTalk_Client():  # クライアントのクラス
                 'openjtalk_service', openjtalk_service)  # クライアント側で使用するサービスの定義
             #「戻り値 = self.client(引数)」。クライアントがsrvファイルで定義した引数（srvファイル内「---」の上側）を別ファイルのサーバーにリクエストし、サーバーからの返り値（srvファイル内「---」の下側）をresponseに代入
             response = self.client(self.openjtalk_service_message.openjtalk_request)
-            # rospy.loginfo("OpenJTalkサービスのリクエストに成功：{}".format(response.openjtalk_response))
-            # return response.openjtalk_response
 
         except rospy.ServiceException:
-            rospy.loginfo("OpenJTalkサービスのリクエストに失敗")
+            rospy.loginfo("")
 
 
 
@@ -406,7 +332,7 @@ class OpenJTalk_Client():  # クライアントのクラス
 
 
 
-    def finish_explanation(self):
+    def finish_explanation(self): #説明終了
         self.openjtalk_service_message.openjtalk_request = "以上で説明を終わります\n"
         print("\n\n{}\n".format(self.openjtalk_service_message.openjtalk_request))
         self.openjtalk_service_request() #OpenJTalkサービスのリクエスト
@@ -437,115 +363,19 @@ class OpenJTalk_Client():  # クライアントのクラス
                 for wakati_text in wakati_text_list:
                     if wakati_text in recognized_text_list: #もう一度説明が必要だと判定するリストに音声認識結果が含まれている場合
                         self.explain_again(Text_list, search_word_list) #もう一度説明
-                        break
-                if len(Text_list)-1 > self.count:
+                if len(Text_list)-1 > self.count: #まだ説明する単語がある場合
                     self.go_to_next_word() #次の単語に移る
-                else:
-                    self.finish_explanation()
-                break
-            else:
-                if len(Text_list)-1 > self.count:
+                    break
+                else: #説明する単語がもうない場合
+                    self.finish_explanation() #説明終了
+                    break
+            else: #音声認識が必要でない（False）場合
+                if len(Text_list)-1 > self.count: #まだ説明する単語がある場合
                     self.go_to_next_word() #次の単語に移る
-                else:
-                    self.finish_explanation()
-                break
-
-
-
-# class Publishsers(): #パブリッシャーのクラス
-#     def __init__(self): #コンストラクタと呼ばれる初期化のための関数（メソッド）
-#         self.count = 0
-#         #messageの型を作成
-#         self.message = speech_recognition_message() 
-#         #speech_recognition_message型のメッセージを"recognition_txt_topic"というトピックに送信するパブリッシャーの作成
-#         self.publisher = rospy.Publisher('recognition_txt_topic', speech_recognition_message, queue_size=10)
-#         self.rate = rospy.Rate(0.7) #1秒間に0.7回データを送信する
-#         self.number = 0
-
-
-
-#     def explain(self): #説明
-#             mc = Mecab()
-#             Text_list, search_word_list = mc.mecab_main(self.count)
-#             return Text_list, search_word_list
-
-
-
-#     def make_msg(self): #送信するメッセージの作成
-#         Text_list, search_word_list = self.explain()
-#         if len(Text_list) >= self.number:
-#             self.message.Text = "{}".format(Text_list[self.number])
-#         self.message.count = self.count
-#         return Text_list, search_word_list
-
-
-
-#     def send_msg(self): #メッセージを送信（音声合成、リアルセンスにアクセス）
-#         while True:
-#             Text_list, search_word_list = self.make_msg() #送信するメッセージの作成
-#             # play_end_check = "再生終了でない"
-#             rs = Realsense_Action_Client() #クラスのインスタンス生成
-#             rs.make_goal() #アクション目標（Goal）の作成
-    
-#             for self.number in range(len(Text_list)):
-#                 self.message.Text = "{}".format(Text_list[self.number])
-#                 self.publisher.publish(self.message) #作成したメッセージの送信
-#                 print("\n\n{}".format(self.message.Text))
-
-#                 if (len(search_word_list) >= self.number) and (self.number >= 1):
-#                     gi = Google_image() #クラスのインスタンス生成
-#                     link = gi.create_url(search_word_list[self.number-1], Text_list[self.number]) #Google画像検索のURLを生成
-#                     gi.show_image(link) #ダウンロードした画像の表示
-#                 # self.rate.sleep()
-    
-#             voice_recognition_necessity = rs.request_result() #アクション結果のリクエスト
-#             # self.rate.sleep()
-    
-#             if voice_recognition_necessity: #音声認識が必要（True）な場合
-#                 self.message.Text = "今の説明で分かりましたか？"
-#                 print("\n\n{}\n".format(self.message.Text))
-#                 self.publisher.publish(self.message) #作成したメッセージの送信
-#                 self.message.Text = "マイクに向かって答えてください"
-#                 print("{}\n\n".format(self.message.Text))
-#                 self.publisher.publish(self.message) #作成したメッセージの送信
-#                 self.rate.sleep()
-#                 vrc = Voice_Recognition_Client()
-#                 voice_recognition_response = vrc.voice_recognition_service_request()
-#                 self.rate.sleep()
-
-#                 if voice_recognition_response in recognized_text_list: #もう一度説明が必要だと判定するリストに音声認識結果が含まれている場合
-#                     self.number = 0
-#                     self.message.Text = "わかりました"
-#                     for i in range(4):
-#                         self.rate.sleep()
-#                     print("\n\n{}\n\n".format(self.message.Text))
-#                     self.publisher.publish(self.message) #作成したメッセージの送信
-#                     for i in range(3):
-#                         self.rate.sleep()
-#                     self.message.Text = "もう一度説明します"
-#                     print("{}\n\n".format(self.message.Text))
-#                     self.publisher.publish(self.message) #作成したメッセージの送信
-#                     for i in range(3):
-#                         self.rate.sleep()
-
-#                     for self.number in range(len(Text_list)):
-#                         self.message.Text = "{}".format(Text_list[self.number])
-#                         self.publisher.publish(self.message) #作成したメッセージの送信
-#                         print(self.message.Text)
-
-#                         if (len(search_word_list) >= self.number) and (self.number >= 1):
-#                             gi = Google_image() #クラスのインスタンス生成
-#                             link = gi.create_url(search_word_list[self.number-1], Text_list[self.number]) #Google画像検索のURLを生成
-#                             gi.show_image(link) #ダウンロードした画像の表示
-#                         self.rate.sleep()
-#                     break
-
-#                 else:
-#                     break
-
-#             else:
-#                 break
-        #rospy.loginfo("送信：message = %s, count = %d" %(self.message.Text, self.message.count))
+                    break
+                else: #説明する単語がもうない場合
+                    self.finish_explanation() #説明終了
+                    break
 
 
 
@@ -589,16 +419,6 @@ class Realsense_Action_Client():  #アクションクライアントのクラス
 
 
 
-    # def request_aciton_server_result(self): #アクションサーバの終了をリクエスト
-    #     self.realsense_action_client.cancel_goal()
-    #     print("アクションサーバのキャンセルをリクエスト")
-    #     # self.goal.action_request = "リアルセンスアクションサーバの終了"
-    #     # self.action_service_request() #アクションサービスのリクエスト
-    #     # voice_recognition_necessity = self.request_result() #アクション結果（Result）のリクエスト
-    #     # return voice_recognition_necessity
-
-
-
     def request_result(self): #アクション結果（Result）のリクエスト
         rospy.loginfo("アクションサーバの待機中")
         # 結果が返ってくるまで30秒待機。ここで処理が一時停止（ブロッキング）する
@@ -616,31 +436,6 @@ class Realsense_Action_Client():  #アクションクライアントのクラス
 
         except rospy.ServiceException:
             rospy.loginfo("リアルセンスアクションサービスのリクエストに失敗")
-
-
-
-# class Check_Finish_Server(): #サーバーのクラス
-#     def __init__(self):
-#         #service_messageの型を作成
-#         self.check_finish_service_message = check_finish_service()
-
-
-
-#     def make_msg(self):
-#         self.check_finish_service_message.check_finish_response = True
-#         return self.check_finish_service_message.check_finish_response
-
-
-
-#     def success_log(self, req): #成功メッセージの表示（callback関数）
-#         rospy.loginfo("\nリアルセンスサービスの終了確認リクエストがありました：\nmessage = {}\n".format(req.realsense_request))
-#         check_finish_response = self.make_msg()
-#         return check_finish_response #srvファイルで定義した返り値をsrvに渡す。rospy.Serviceによって呼び出された関数（callback関数）内でreturnすること
-
-
-
-#     def service_response(self): #サービスの応答
-#         srv = rospy.Service('check_finish_service', check_finish_service, self.success_log) #サービスのリクエストがあった場合にsuccess_log関数（callback関数）を呼び出し、実行。呼び出し先の関数内で返り値をreturnする必要がある
 
 
 
@@ -670,17 +465,11 @@ def main(): #メイン関数
     #初期化し、ノードの名前を設定
     rospy.init_node('explain_gogen_node', anonymous=True)
     #クラスのインスタンス作成（クラス内の関数や変数を使えるようにする）
-    # pub = Publishsers()
     ojc = OpenJTalk_Client()
     while not rospy.is_shutdown(): #Ctrl + Cが押されるまで繰り返す
         if len(words) > ojc.count:
             ojc.main_loop()
             ojc.count += 1
-            # rospy.spin()
-    #         pub.rate.sleep()
-    #         pub.send_msg() #メッセージを送信
-    #         pub.rate.sleep()
-    #         pub.count += 1
         else:
             break
 
