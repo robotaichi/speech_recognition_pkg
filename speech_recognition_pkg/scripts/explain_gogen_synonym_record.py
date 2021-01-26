@@ -34,7 +34,7 @@ words = ["conceal", "contract", "contest"] #単語リスト
 meanings = ["覆う", "引き合う", "コンテスト"] #意味リスト
 
 #もう一度説明が必要だと判定する音声認識結果のリスト
-recognized_text_list = ["いいえ", "いえ", "うーん", "ううん", "えーと", "あり", "ませ", "わから", "いや", "ノー", "NO", "えっ", "1", "一", "回", "度", "いちど", "かい", "教え", "お願い", "わかん", "ない", "まだ", "ちょっと"]
+recognized_text_list = ["いいえ", "いえ", "うーん", "ううん", "えーと", "あり", "ませ", "わから", "いや", "ノー", "NO", "えっ", "1", "一", "回", "度", "いちど", "かい", "教え", "お願い", "わかん", "ない", "まだ", "ちょっと", "8"]
 #変数設定
 Language = 'ja-JP' #音声認識の対象言語を設定
 r = sr.Recognizer()
@@ -365,17 +365,15 @@ class OpenJTalk_Client():  # クライアントのクラス
                         self.explain_again(Text_list, search_word_list) #もう一度説明
                 if len(Text_list)-1 > self.count: #まだ説明する単語がある場合
                     self.go_to_next_word() #次の単語に移る
-                    break
                 else: #説明する単語がもうない場合
                     self.finish_explanation() #説明終了
-                    break
+                break
             else: #音声認識が必要でない（False）場合
                 if len(Text_list)-1 > self.count: #まだ説明する単語がある場合
                     self.go_to_next_word() #次の単語に移る
-                    break
                 else: #説明する単語がもうない場合
                     self.finish_explanation() #説明終了
-                    break
+                break
 
 
 
