@@ -81,8 +81,8 @@ class Voice_recognition_Server(): #サーバーのクラス
 
 
     def make_msg(self): #送信するメッセージの作成
-            recognized_text = self.voice_record() #音声録音・認識
-            #recognized_text = unicode("わかった", "utf-8") #デバッグ用
+            # recognized_text = self.voice_record() #音声録音・認識
+            recognized_text = unicode("わかった", "utf-8") #デバッグ用
             self.service_message.voice_recognition_response = u"{}".format(recognized_text).encode("utf-8") #voice_record関数により音声認識した結果を日本語も扱えるutf-8型にエンコード
 
 

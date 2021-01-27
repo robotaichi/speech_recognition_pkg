@@ -84,10 +84,10 @@ class Google_Image_Server(): #サーバーのクラス
     def show_image(self, url): #ダウンロードした画像の表示
         self.download_img(url) #Google画像検索から画像をダウンロード
         img = cv2.imread(self.file_name) #画像の読み込み
-        zoom_rate = 2.5 #拡大率
+        zoom_rate = 5 #拡大率
         image = cv2.resize(img, dsize=None, fx = zoom_rate, fy = zoom_rate) #画像を拡大
         cv2.imshow("image", image) #拡大した画像を表示
-        cv2.moveWindow('image', 200, 550) #ウィンドウ位置の変更
+        cv2.moveWindow('image', 0, 200) #ウィンドウ位置の変更
         cv2.waitKey(5000) #5秒待機
         # self.rate.sleep()
         pecc = Play_End_Check_Client()

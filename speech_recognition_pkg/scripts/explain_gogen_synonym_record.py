@@ -25,13 +25,18 @@ import ssl #Google画像検索に使用
 ssl._create_default_https_context = ssl._create_unverified_context #Google画像検索に使用
 import cv2 #画像処理に使用
 import time
+
 #既にファイルが存在する場合
 if os.path.exists("/home/limlab/catkin_ws/src/speech_recognition_pkg/google_image_url.txt"): 
     os.remove("/home/limlab/catkin_ws/src/speech_recognition_pkg/google_image_url.txt") #ファイルの削除
 
 #出題する英単語とその意味の設定
-words = ["conceal", "contract", "contest"] #単語リスト
-meanings = ["覆う", "引き合う", "コンテスト"] #意味リスト
+words = ["contour", "implement", "instance", "artificial", "distribute", "unlike", "abstract", "resemble", "investigate", "conclusion"] #単語リスト
+meanings = ["輪郭", "実行する", "実例", "人工の", "分配する", "ちがって", "抽象的な", "似ている", "調べる", "結論"] #意味リスト
+
+#デバッグ用
+# words = ["artificial", "unlike"] #単語リスト
+# meanings = ["人工の", "ちがって"] #意味リスト
 
 #もう一度説明が必要だと判定する音声認識結果のリスト
 recognized_text_list = ["いいえ", "いえ", "うーん", "ううん", "えーと", "あり", "ませ", "わから", "いや", "ノー", "NO", "えっ", "1", "一", "回", "度", "いちど", "かい", "教え", "お願い", "わかん", "ない", "まだ", "ちょっと", "8"]
@@ -113,13 +118,26 @@ class Mecab():
                 text2_list.append("{}が「{}」\n類義語が{}\n".format(self.output[i][0], self.output[i][1], synonym))
                 self.Text_list.append(text2_list[i])
                 search_word_list.append(self.output[i][1])
+        if "否定" in search_word_list:
+            search_word_list.append("の")
+            search_word_list.append(search_word_list.pop(0)) #先頭(0番目)の文字「否定」を削除し(pop)、一番後ろに追加(append)   
+        if "形容詞化" in search_word_list:
+            search_word_list.append("の")
+            search_word_list.append(search_word_list.pop(len(search_word_list)-2)) #要素数-から2を引いた位置にある文字「動詞化」を削除し(pop)、一番後ろに追加(append)
+        if "動詞化" in search_word_list:
+            search_word_list.append("の")
+            search_word_list.append(search_word_list.pop(len(search_word_list)-2)) #要素数-から2を引いた位置にある文字「動詞化」を削除し(pop)、一番後ろに追加(append)      
+        text3 = "".join(search_word_list)
+        
+        text4 = "まとめると" + "「{}」\n".format(text3)
+        self.Text_list.append(text4)
         for i in range(len(self.output)):
             if (self.output[i][1] != None) and (self.first == True): #語源がある（要素が存在する）場合
-                text3 = "から「{}」という意味になります\n".format(meanings[number])
+                text5 = "から「{}」という意味になります\n".format(meanings[number])
                 self.first = False
             elif self.output[i][1] == None: #語源がない（配列の要素が全て空の）場合
-                text3 = "「{}」という意味です\n".format(meanings[number])
-        self.Text_list.append(text3)
+                text5 = "「{}」という意味です\n".format(meanings[number])
+        self.Text_list.append(text5)
         return self.Text_list, search_word_list
 
 
@@ -248,6 +266,16 @@ class OpenJTalk_Client():  # クライアントのクラス
 
 
 
+    def introduction(self):
+        self.openjtalk_service_message.openjtalk_request = "今から説明を始めます"
+        print("\n\n{}\n\n".format(self.openjtalk_service_message.openjtalk_request))
+        self.openjtalk_service_request() #OpenJTalkサービスのリクエスト
+        self.openjtalk_service_message.openjtalk_request = "英単語の意味をできるだけ覚えてください"
+        print("\n\n{}\n\n".format(self.openjtalk_service_message.openjtalk_request))
+        self.openjtalk_service_request() #OpenJTalkサービスのリクエスト
+
+
+
     def exec_mecab(self): 
             mc = Mecab()
             Text_list, search_word_list = mc.mecab_main(self.count)
@@ -263,6 +291,10 @@ class OpenJTalk_Client():  # クライアントのクラス
 
     def make_request(self): #リクエストの作成
         Text_list, search_word_list = self.exec_mecab()
+        # for i in range(len(Text_list)):
+        #     print(Text_list[i])
+        # print(len(Text_list), self.number)
+
         if len(Text_list) >= self.number:
             self.openjtalk_service_message.openjtalk_request = "{}".format(Text_list[self.number])
         return Text_list, search_word_list
@@ -360,13 +392,13 @@ class OpenJTalk_Client():  # クライアントのクラス
                     if wakati_text in recognized_text_list: #もう一度説明が必要だと判定するリストに音声認識結果が含まれている場合
                         self.explain_again(Text_list, search_word_list) #もう一度説明
                         break
-                if len(Text_list)-1 > self.count: #まだ説明する単語がある場合
+                if len(words)-1 > self.count: #まだ説明する単語がある場合
                     self.go_to_next_word() #次の単語に移る
                 else: #説明する単語がもうない場合
                     self.finish_explanation() #説明終了
                 break
             else: #音声認識が必要でない（False）場合
-                if len(Text_list)-1 > self.count: #まだ説明する単語がある場合
+                if len(words)-1 > self.count: #まだ説明する単語がある場合
                     self.go_to_next_word() #次の単語に移る
                 else: #説明する単語がもうない場合
                     self.finish_explanation() #説明終了
@@ -460,10 +492,12 @@ def main(): #メイン関数
     rospy.init_node('explain_gogen_node', anonymous=True)
     #クラスのインスタンス作成（クラス内の関数や変数を使えるようにする）
     ojc = OpenJTalk_Client()
+    ojc.introduction()
     while not rospy.is_shutdown(): #Ctrl + Cが押されるまで繰り返す
         if len(words) > ojc.count:
             ojc.main_loop()
             ojc.count += 1
+            ojc.number = 0
         else:
             break
 
