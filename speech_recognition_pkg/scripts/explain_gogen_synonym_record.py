@@ -306,11 +306,6 @@ class OpenJTalk_Client():  # クライアントのクラス
         self.openjtalk_service_request() #OpenJTalkサービスのリクエスト
         self.explain(Text_list, search_word_list) #説明
 
-        if len(Text_list)-1 > self.count: #最後の単語でない場合
-            self.go_to_next_word() #次の単語に移る
-        else: #最後の単語の場合
-            self.finish_explanation()
-
 
 
     def openjtalk_service_request(self): #OpenJTalkサービスのリクエスト
@@ -367,17 +362,15 @@ class OpenJTalk_Client():  # クライアントのクラス
                         break
                 if len(Text_list)-1 > self.count: #まだ説明する単語がある場合
                     self.go_to_next_word() #次の単語に移る
-                    break
                 else: #説明する単語がもうない場合
                     self.finish_explanation() #説明終了
-                    break
+                break
             else: #音声認識が必要でない（False）場合
                 if len(Text_list)-1 > self.count: #まだ説明する単語がある場合
                     self.go_to_next_word() #次の単語に移る
-                    break
                 else: #説明する単語がもうない場合
                     self.finish_explanation() #説明終了
-                    break
+                break
 
 
 
