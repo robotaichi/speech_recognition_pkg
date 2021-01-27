@@ -35,6 +35,7 @@ meanings = ["覆う", "引き合う", "コンテスト"] #意味リスト
 
 #もう一度説明が必要だと判定する音声認識結果のリスト
 recognized_text_list = ["いいえ", "いえ", "うーん", "ううん", "えーと", "あり", "ませ", "わから", "いや", "ノー", "NO", "えっ", "1", "一", "回", "度", "いちど", "かい", "教え", "お願い", "わかん", "ない", "まだ", "ちょっと", "8"]
+
 #変数設定
 Language = 'ja-JP' #音声認識の対象言語を設定
 r = sr.Recognizer()
@@ -342,7 +343,7 @@ class OpenJTalk_Client():  # クライアントのクラス
 
 
 
-    def voice_recognition_response_mecab(self, voice_recognition_response): 
+    def voice_recognition_response_mecab(self, voice_recognition_response): #認識した音声の形態素解析
             mc = Mecab()
             wakati_text_list = mc.mecab_wakati(voice_recognition_response)
             return wakati_text_list
@@ -358,22 +359,25 @@ class OpenJTalk_Client():  # クライアントのクラス
 
             if voice_recognition_necessity: #音声認識が必要（True）な場合
                 voice_recognition_response = self.ask_question() #わかったかどうかの質問
-                wakati_text_list = self.voice_recognition_response_mecab(voice_recognition_response)
+                wakati_text_list = self.voice_recognition_response_mecab(voice_recognition_response) #認識した音声の形態素解析
 
                 for wakati_text in wakati_text_list:
                     if wakati_text in recognized_text_list: #もう一度説明が必要だと判定するリストに音声認識結果が含まれている場合
                         self.explain_again(Text_list, search_word_list) #もう一度説明
+                        break
                 if len(Text_list)-1 > self.count: #まだ説明する単語がある場合
                     self.go_to_next_word() #次の単語に移る
+                    break
                 else: #説明する単語がもうない場合
                     self.finish_explanation() #説明終了
-                break
+                    break
             else: #音声認識が必要でない（False）場合
                 if len(Text_list)-1 > self.count: #まだ説明する単語がある場合
                     self.go_to_next_word() #次の単語に移る
+                    break
                 else: #説明する単語がもうない場合
                     self.finish_explanation() #説明終了
-                break
+                    break
 
 
 
@@ -392,8 +396,7 @@ class Voice_Recognition_Client():  # クライアントのクラス
             self.service_message.voice_recognition_request = "音声認識サービスのリクエスト"
             # 「戻り値 = self.client(引数)」。クライアントがsrvファイルで定義した引数（srvファイル内「---」の上側）を別ファイルのサーバーにリクエストし、サーバーからの返り値（srvファイル内「---」の下側）をresponseに代入
             response = self.client(self.service_message.voice_recognition_request)
-            rospy.loginfo("音声認識サービスのリクエストに成功：{}".format(
-                response.voice_recognition_response))
+            # rospy.loginfo("音声認識サービスのリクエストに成功：{}".format(response.voice_recognition_response))
             return response.voice_recognition_response
 
         except rospy.ServiceException:
@@ -418,11 +421,11 @@ class Realsense_Action_Client():  #アクションクライアントのクラス
 
 
     def request_result(self): #アクション結果（Result）のリクエスト
-        rospy.loginfo("アクションサーバの待機中")
+        # rospy.loginfo("アクションサーバの待機中")
         # 結果が返ってくるまで30秒待機。ここで処理が一時停止（ブロッキング）する
         self.realsense_action_client.wait_for_result(rospy.Duration(30))
         result = self.realsense_action_client.get_result() # アクションサーバの「アクションサーバ.set_succeeded(アクション結果)」によって返されたアクション結果を取得
-        rospy.loginfo("アクション結果：{}".format(result.voice_recognition_necessity))
+        # rospy.loginfo("アクション結果：{}".format(result.voice_recognition_necessity))
         return result.voice_recognition_necessity
 
 
@@ -453,7 +456,7 @@ class Check_Finish_Action_Server(): #アクションサーバーのクラス
 
 
     def action_callback(self, goal): #アクションサーバの実体（コールバック関数）
-        rospy.loginfo("\nアクションリクエストがありました：\nmessage = {}\n".format(goal.action_request)) #アクション目標（Goal）の取得
+        # rospy.loginfo("\nアクションリクエストがありました：\nmessage = {}\n".format(goal.action_request)) #アクション目標（Goal）の取得
         self.result.check_finish_response = self.response_tf() #リアルセンスの終了（ブール値）をアクション結果メッセージに代入
         self.check_finish_action_server.set_succeeded(self.result) #アクション結果をアクションクライアントに返す。ここでは、定義したアクション結果（Result）のインスタンスを引数に指定すること
 

@@ -62,7 +62,7 @@ class Voice_recognition_Server(): #サーバーのクラス
         
             try: #音声を認識できた場合
                 recognized_text = r.recognize_google(audio, language = Language) #音声認識
-                # print(u'Transcript: {}'.format(recognized_text).encode('utf-8')) #認識した音声（テキスト）を表示
+                print(u'認識した音声: {}'.format(recognized_text).encode('utf-8')) #認識した音声（テキスト）を表示
                 return recognized_text
         
             #音声を認識できなかった場合
