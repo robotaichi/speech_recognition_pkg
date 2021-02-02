@@ -3,15 +3,13 @@
 #上記2行は必須構文のため、コメント文だと思って削除しないこと
 #Python2.7用プログラム
 
-import rospy
-import pyaudio
-from pydub import AudioSegment
-from pydub.utils import make_chunks
-from gtts import gTTS
-from speech_recognition_pkg.srv import play_end_check_service, google_tts_service # サービスファイルの読み込み（from パッケージ名.srv import 拡張子なしサービスファイル名）
+import rospy #ROSをPythonで扱うのに必要
+import pyaudio #wavファイルを扱うのに必要
+from pydub import AudioSegment #mp3ファイルを扱うのに必要
+from pydub.utils import make_chunks #mp3ファイルを扱うのに必要
+from gtts import gTTS #Google TTSを使用するのに必要
+from speech_recognition_pkg.srv import google_tts_service # サービスファイルの読み込み（from パッケージ名.srv import 拡張子なしサービスファイル名）
 from hide_pyaudio_debug_message import noalsaerr #PyAudioのデバッグメッセージの非表示
-
-
 
 #変数設定
 mp3_file = "/home/limlab/catkin_ws/src/speech_recognition_pkg/output.mp3"
@@ -63,7 +61,7 @@ class Google_TTS_Server(): #サーバーのクラス
 
 
 
-    def make_response(self):
+    def make_response(self): #リスポンスの作成
         self.service_message.google_tts_response = True
 
 
@@ -83,9 +81,8 @@ class Google_TTS_Server(): #サーバーのクラス
 def main(): #メイン関数
     #初期化し、ノードの名前を設定
     rospy.init_node('google_tts_server', anonymous=True)
-    #クラスのインスタンス作成（クラス内の関数や変数を使えるようにする）
-    gts = Google_TTS_Server()
-    gts.service_response()
+    gts = Google_TTS_Server() #クラスのインスタンス作成（クラス内の関数や変数を使えるようにする）
+    gts.service_response() #サービスの応答
     rospy.spin() #callback関数を繰り返し呼び出す（終了防止）
 
 

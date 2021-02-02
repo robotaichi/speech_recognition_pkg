@@ -5,29 +5,25 @@
 
 #ROS関係ライブラリ
 import rospy #ROSをpythonで使用するのに必要
-from speech_recognition_pkg.msg import speech_recognition_message #メッセージファイルの読み込み（from パッケージ名.msg import 拡張子なしメッセージファイル名）
 from speech_recognition_pkg.srv import play_end_check_service, google_image_service # サービスファイルの読み込み（from パッケージ名.srv import 拡張子なしサービスファイル名）
 
 import requests #Google画像検索に使用
 import random #ランダムに画像を取得するために使用
-import shutil #Google画像検索に使用
 import bs4 #Google画像検索に使用
-import os
 import ssl #Google画像検索に使用
 ssl._create_default_https_context = ssl._create_unverified_context #Google画像検索に使用
-import cv2 #画像処理に使用
-import time
+import cv2 #OpenCVの使用
 
 
 
-class Play_End_Check_Client():  # クライアントのクラス
+class Play_End_Check_Client(): #クライアントのクラス
     def __init__(self):  # コンストラクタと呼ばれる初期化のための関数（メソッド）
         self.rate = rospy.Rate(0.3)  # 1秒間に0.3回データを受信する
-        self.service_message = play_end_check_service()
+        self.service_message = play_end_check_service() #サービスメッセージのインスタンス生成
 
 
 
-    def play_end_check_service_request(self):  # サービスのリクエスト
+    def play_end_check_service_request(self): #再生終了確認サービスのリクエスト
         rospy.wait_for_service('play_end_check_service')  # サービスが使えるようになるまで待機
         try:
             self.client = rospy.ServiceProxy(
@@ -43,19 +39,18 @@ class Play_End_Check_Client():  # クライアントのクラス
 class Google_Image_Server(): #サーバーのクラス
     def __init__(self):
         #service_messageの型を作成
-        self.service_message = google_image_service()
+        self.service_message = google_image_service() #サービスメッセージのインスタンス生成
         self.rate = rospy.Rate(0.3) # 1秒間に0.3回データを受信する
-        self.file_name = "/home/limlab/catkin_ws/src/speech_recognition_pkg/scripts/download_image.png"
-        #self.pub = Publishsers() #パブリッシャークラスのインスタンス化(実体化)
+        self.file_name = "/home/limlab/catkin_ws/src/speech_recognition_pkg/scripts/download_image.png" #画像を保存するファイルの指定
 
 
 
     def create_url(self, data, text): #Google画像検索のURLを生成
         while True:
-            Res = requests.get("https://www.google.com/search?hl=jp&q=" + data + "&btnG=Google+Search&tbs=0&safe=on&tbm=isch")
-            Html = Res.text
-            Soup = bs4.BeautifulSoup(Html,'lxml')
-            links = Soup.find_all("img")
+            response = requests.get("https://www.google.com/search?hl=jp&q=" + data + "&btnG=Google+Search&tbs=0&safe=on&tbm=isch")
+            Html = response.text
+            soup = bs4.BeautifulSoup(Html,'lxml')
+            links = soup.find_all("img")
             link = random.choice(links).get("src")
             if link != "/images/branding/searchlogo/1x/googlelogo_desk_heirloom_color_150x55dp.gif": #Gif画像でない場合
                 # print("{}\n".format(link))
@@ -76,8 +71,9 @@ class Google_Image_Server(): #サーバーのクラス
         r = requests.get(url, stream=True)
         if r.status_code == 200:
             with open(self.file_name, 'wb') as f:
-                r.raw.decode_content = True
-                shutil.copyfileobj(r.raw, f)
+                f.write(r.content)
+                # r.raw.decode_content = True
+                # shutil.copyfileobj(r.raw, f)
 
 
 
@@ -89,24 +85,18 @@ class Google_Image_Server(): #サーバーのクラス
         cv2.imshow("image", image) #拡大した画像を表示
         cv2.moveWindow('image', 0, 200) #ウィンドウ位置の変更
         cv2.waitKey(5000) #5秒待機
-        # self.rate.sleep()
-        pecc = Play_End_Check_Client()
-        pecc.play_end_check_service_request()
-        # cv2.waitKey(1000) #1秒待機
-            # print("OK")
-        # pecc.play_end_check_service_request()
+        # pecc = Play_End_Check_Client() #クラスのインスタンス生成
+        # pecc.play_end_check_service_request() #再生終了確認サービスのリクエスト
         cv2.destroyAllWindows() #ウィンドウを破棄
 
 
     def make_msg(self): #送信するメッセージの作成
-            #recognized_text = self.voice_record() #音声録音・認識
             self.service_message.google_image_response = True
 
 
 
     def success_log(self, req): #成功メッセージの表示（callback関数）
-        # rospy.loginfo("\n音声認識サービスのリクエストがありました：\nmessage = {}\n".format(req.voice_recognition_request))
-        # time.sleep(15)
+        # search_word = self.mecab_wakati(req.search_word)
         link = self.create_url(req.search_word, req.text) #Google画像検索のURLを生成
         self.show_image(link) #ダウンロードした画像の表示
         self.make_msg()
@@ -121,10 +111,10 @@ class Google_Image_Server(): #サーバーのクラス
 
 def main(): #メイン関数
     #初期化し、ノードの名前を設定
-    rospy.init_node('google_image_node', anonymous=True)
-    gis = Google_Image_Server()
-    gis.service_response()
-    rospy.spin()
+    rospy.init_node('google_image_server', anonymous=True)
+    gis = Google_Image_Server() #クラスのインスタンス生成
+    gis.service_response() #サービスの応答
+    rospy.spin() #終了防止
 
 
 
