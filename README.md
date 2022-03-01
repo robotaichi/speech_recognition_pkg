@@ -7,8 +7,8 @@
 音声録音には**PyAudio**，音声認識には**SpeechRecognition**，音声合成には**gTTS**，形態素解析には**mecab**を利用しています．<br>
 
 ## 動作環境
-OS：Ubuntu 16.04, 18.04 LTS<br>
-ROS：Kinetic, Melodic<br>
+OS：Ubuntu 16.04, 18.04, 20.04 LTS<br>
+ROS：Kinetic, Melodic, Noetic<br>
 Python：2.7<br>
 PyAudio：0.2.11<br>
 SpeechRecognition：3.8.1<br>
